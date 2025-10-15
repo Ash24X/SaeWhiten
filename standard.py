@@ -39,10 +39,10 @@ class PCAWhitener:
                 indices = t.randperm(activations.shape[0])[:self.n_samples]
                 activations = activations[indices]
             
-            # Compute mean
+            
             self.mean = activations.mean(dim=0)
             
-            # Center the data
+            
             centered = activations - self.mean
             
             # Compute covariance matrix
@@ -87,7 +87,7 @@ class PCAWhitener:
         if not self.is_fitted:
             raise RuntimeError("PCAWhitener must be fitted before whitening")
         
-        # Center and whiten
+        
         x_centered = x - self.mean
         x_whitened = x_centered @ self.whitening_matrix.T
         return x_whitened
@@ -104,7 +104,7 @@ class PCAWhitener:
         if not self.is_fitted:
             raise RuntimeError("PCAWhitener must be fitted before dewhitening")
         
-        # Dewhiten and uncenter
+        
         x_centered = x_whitened @ self.dewhitening_matrix.T
         x = x_centered + self.mean
         return x
@@ -133,7 +133,7 @@ class StandardTrainer(SAETrainer):
                  wandb_name: Optional[str] = 'StandardTrainer',
                  submodule_name: Optional[str] = None,
                  use_pca_whitening: bool = True,
-                 pca_n_batches: int = 10,  # Number of batches to collect for PCA
+                 pca_n_batches: int = 10,  
                  pca_eps: float = 1e-6,
     ):
         super().__init__(seed)
@@ -195,7 +195,6 @@ class StandardTrainer(SAETrainer):
     def fit_whitener(self, activations: t.Tensor):
         """
         Fit the PCA whitener on a batch of activations.
-        Should be called before training starts.
         """
         if self.use_pca_whitening and not self.whitener.is_fitted:
             print("Fitting PCA whitener...")
@@ -213,7 +212,7 @@ class StandardTrainer(SAETrainer):
             x_hat: Reconstruction in original space
             f: Latent features (if output_features=True)
         """
-        # Check if we should and can use whitening
+
         if self.use_pca_whitening and self.whitener is not None and self.whitener.is_fitted:
             # Whiten input
             x_whitened = self.whitener.whiten(x)
@@ -402,7 +401,7 @@ class StandardTrainerAprilUpdate(SAETrainer):
                  wandb_name: Optional[str] = 'StandardTrainerAprilUpdate',
                  submodule_name: Optional[str] = None,
                  use_pca_whitening: bool = True,
-                 pca_n_batches: int = 10,  # Number of batches to collect for PCA
+                 pca_n_batches: int = 10,  
                  pca_eps: float = 1e-6,
     ):
         super().__init__(seed)
@@ -468,7 +467,7 @@ class StandardTrainerAprilUpdate(SAETrainer):
         """
         Forward pass with PCA whitening.
         """
-        # Check if we should and can use whitening
+        
         if self.use_pca_whitening and self.whitener is not None and self.whitener.is_fitted:
             # Whiten input
             x_whitened = self.whitener.whiten(x)
@@ -500,7 +499,6 @@ class StandardTrainerAprilUpdate(SAETrainer):
         recon_loss = (x - x_hat).pow(2).sum(dim=-1).mean()
         
         # L1 loss with decoder norm (April update style)
-        # Note: decoder weights are in whitened space if using PCA
         l1_loss = (f * self.ae.decoder.weight.norm(p=2, dim=0)).sum(dim=-1).mean()
 
         loss = recon_loss + self.l1_penalty * sparsity_scale * l1_loss
@@ -534,7 +532,7 @@ class StandardTrainerAprilUpdate(SAETrainer):
                 # Fit the whitener
                 self.fit_whitener(all_activations)
                 
-                # Clear the buffer to free memory
+                
                 self.pca_collection_buffer = None
                 
                 # Process the current batch normally
